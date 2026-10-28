@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1E3A8A">
+  <meta name="description" content="SISTEP · Panel de seguridad para la gestión de alertas e incidentes en tiempo real.">
+  <title>SISTEP | Panel de Seguridad</title>
+  <script>
+    /* Evita mostrar el panel antes de validar que exista una sesión guardada. */
+    (function () {
+      try {
+        var raw = localStorage.getItem("sistep.auth.session") || sessionStorage.getItem("sistep.auth.session");
+        if (!raw) {
+          window.location.replace("login.html");
+          return;
+        }
+        var sesion = JSON.parse(raw);
+        if (!sesion.token || (sesion.expiresAt && Date.parse(sesion.expiresAt) <= Date.now())) {
+          localStorage.removeItem("sistep.auth.session");
+          sessionStorage.removeItem("sistep.auth.session");
+          window.location.replace("login.html?expired=1");
+        }
+      } catch (error) {
+        window.location.replace("login.html");
+      }
+    })();
+  </script>
+  <script src="js/theme.js"></script>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="css/views.css">
+  <link rel="stylesheet" href="css/ux.css">
+  <script src="js/auth.js" defer></script>
+  <script src="js/api.js" defer></script>
+  <script src="js/app.js" defer></script>
+  <script src="js/views.js" defer></script>
+  <script src="js/ux.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#mainContent">Saltar al contenido principal</a>
+
+  <!-- Sprite de iconos SVG (sin librerías externas) -->
+  <svg class="svg-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="icon-shield" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2.8 19 5.5v5.4c0 4.4-2.8 8-7 10.3-4.2-2.3-7-5.9-7-10.3V5.5L12 2.8Z"/>
+        <path d="m8.8 11.9 2.1 2.1 4.4-4.5"/>
+      </g>
+    </symbol>
+    <symbol id="icon-grid" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="7" height="7" rx="1.6"/>
+        <rect x="14" y="3" width="7" height="7" rx="1.6"/>
+        <rect x="3" y="14" width="7" height="7" rx="1.6"/>
+        <rect x="14" y="14" width="7" height="7" rx="1.6"/>
+      </g>
+    </symbol>
+    <symbol id="icon-bell" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/>
+        <path d="M10 21h4"/>
+      </g>
+    </symbol>
+    <symbol id="icon-incident" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10.3 3.9 2.7 17a2 2 0 0 0 1.8 3h15a2 2 0 0 0 1.8-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/>
+        <path d="M12 9v4"/>
+        <path d="M12 17h.01"/>
+      </g>
+    </symbol>
+    <symbol id="icon-report" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7l-5-5Z"/>
+        <path d="M14 2v5h5M9 13h6M9 17h6"/>
+      </g>
+    </symbol>
+    <symbol id="icon-settings" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.6v-.2h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z"/>
+      </g>
+    </symbol>
+    <symbol id="icon-search" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="7"/>
+        <path d="m20 20-3.9-3.9"/>
+      </g>
+    </symbol>
+    <symbol id="icon-filter" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 5h18l-7 8v5.2l-4 1.8V13L3 5Z"/>
+      </g>
+    </symbol>
+    <symbol id="icon-more" viewBox="0 0 24 24">
+      <g fill="currentColor" stroke="none">
+        <circle cx="5" cy="12" r="1.7"/>
+        <circle cx="12" cy="12" r="1.7"/>
+        <circle cx="19" cy="12" r="1.7"/>
+      </g>
+    </symbol>
+    <symbol id="icon-refresh" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 11a8 8 0 1 0-2.3 6.7"/>
+        <path d="M20 4v7h-7"/>
+      </g>
+    </symbol>
+    <symbol id="icon-x" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">
+        <path d="M18 6 6 18M6 6l12 12"/>
+      </g>
+    </symbol>
+    <symbol id="icon-eye" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/>
+        <circle cx="12" cy="12" r="3"/>
+      </g>
+    </symbol>
+    <symbol id="icon-check" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m5 12 4.2 4.2L19 6.5"/>
+      </g>
+    </symbol>
+    <symbol id="icon-calendar" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="5" width="18" height="16" rx="2"/>
+        <path d="M16 3v4M8 3v4M3 10h18"/>
+      </g>
+    </symbol>
+    <symbol id="icon-clock" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="9"/>
+        <path d="M12 7v5l3.2 2"/>
+      </g>
+    </symbol>
+    <symbol id="icon-arrow-up" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M7 17 17 7M8 7h9v9"/>
+      </g>
+    </symbol>
+    <symbol id="icon-menu" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">
+        <path d="M4 7h16M4 12h16M4 17h16"/>
+      </g>
+    </symbol>
+    <symbol id="icon-chevron-down" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m6 9 6 6 6-6"/>
+      </g>
+    </symbol>
+    <symbol id="icon-download" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3v12M7.5 10.5 12 15l4.5-4.5M4 20h16"/>
+      </g>
+    </symbol>
+    <symbol id="icon-map-pin" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 10c0 5.5-8 12-8 12S4 15.5 4 10a8 8 0 1 1 16 0Z"/>
+        <circle cx="12" cy="10" r="2.5"/>
+      </g>
+    </symbol>
+    <symbol id="icon-user" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="8" r="4"/>
+        <path d="M4 21a8 8 0 0 1 16 0"/>
+      </g>
+    </symbol>
+    <symbol id="icon-info" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="9"/>
+        <path d="M12 11v5M12 8h.01"/>
+      </g>
+    </symbol>
+    <symbol id="icon-camera" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 7h3l1.5-2h7L17 7h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z"/>
+        <circle cx="12" cy="13" r="3.2"/>
+      </g>
+    </symbol>
+    <symbol id="icon-plus" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M12 5v14M5 12h14"/>
+      </g>
+    </symbol>
+    <symbol id="icon-chevron-left" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m15 18-6-6 6-6"/>
+      </g>
+    </symbol>
+    <symbol id="icon-chevron-right" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m9 18 6-6-6-6"/>
+      </g>
+    </symbol>
+    <symbol id="icon-arrow-left" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5M11 6l-6 6 6 6"/>
+      </g>
+    </symbol>
+    <symbol id="icon-moon" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>
+      </g>
+    </symbol>
+    <symbol id="icon-sun" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="4"/>
+        <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>
+      </g>
+    </symbol>
+    <symbol id="icon-bus" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="4" y="3" width="16" height="14" rx="2.5"/>
+        <path d="M4 11h16M8 21v-2M16 21v-2M7.5 14.5h.01M16.5 14.5h.01"/>
+      </g>
+    </symbol>
+    <symbol id="icon-wifi-off" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 2l20 20M8.5 16.4a5 5 0 0 1 7 0M5 12.9a10 10 0 0 1 3.2-2.1M10.7 5.1A15 15 0 0 1 22 9M2 9a15 15 0 0 1 4-2.7M12 20h.01"/>
+      </g>
+    </symbol>
+    <symbol id="icon-logout" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+        <path d="m10 17 5-5-5-5M15 12H3"/>
+      </g>
+    </symbol>
+    <symbol id="icon-chart" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>
+      </g>
+    </symbol>
+    <symbol id="icon-pulse" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 12h4l2.2-6 4.2 12 2.2-6H21"/>
+      </g>
+    </symbol>
+  </svg>
+
+  <div class="app-shell">
+    <div class="sidebar-overlay" id="sidebarOverlay" hidden></div>
+
+    <aside class="sidebar" id="sidebar" aria-label="Navegación principal">
+      <div class="sidebar__header">
+        <a class="brand" href="#dashboard" aria-label="SISTEP, ir al panel de seguridad">
+          <span class="brand__mark" aria-hidden="true">
+            <svg class="icon"><use href="#icon-shield"></use></svg>
+          </span>
+          <span class="brand__copy">
+            <span class="brand__name">SISTEP</span>
+            <span class="brand__tagline">Seguridad inteligente</span>
+          </span>
+        </a>
+        <button class="icon-button sidebar__close" id="sidebarClose" type="button" aria-label="Cerrar menú">
+          <svg class="icon" aria-hidden="true"><use href="#icon-x"></use></svg>
+        </button>
+      </div>
+
+      <nav class="sidebar__nav" aria-label="Módulos del sistema">
+        <p class="sidebar__label">Menú principal</p>
+        <ul class="nav-list">
+          <li>
+            <a class="nav-link is-active" href="#dashboard" data-view-link="dashboard" aria-current="page">
+              <span class="nav-link__icon"><svg class="icon" aria-hidden="true"><use href="#icon-grid"></use></svg></span>
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li>
+            <a class="nav-link" href="#alertas" data-view-link="alertas">
+              <span class="nav-link__icon"><svg class="icon" aria-hidden="true"><use href="#icon-bell"></use></svg></span>
+              <span>Alertas</span>
+              <span class="nav-link__badge" id="navAlertBadge" aria-label="3 alertas">3</span>
+            </a>
+          </li>
+          <li>
+            <a class="nav-link" href="#incidentes" data-view-link="incidentes">
+              <span class="nav-link__icon"><svg class="icon" aria-hidden="true"><use href="#icon-incident"></use></svg></span>
+              <span>Incidentes</span>
+            </a>
+          </li>
+          <li>
+            <a class="nav-link" href="#reportes" data-view-link="reportes">
+              <span class="nav-link__icon"><svg class="icon" aria-hidden="true"><use href="#icon-report"></use></svg></span>
+              <span>Reportes</span>
+            </a>
+          </li>
+          <li>
+            <a class="nav-link" href="#configuracion" data-view-link="configuracion">
+              <span class="nav-link__icon"><svg class="icon" aria-hidden="true"><use href="#icon-settings"></use></svg></span>
+              <span>Configuración</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <div class="sidebar__footer">
+        <div class="system-status" role="status">
+          <span class="system-status__dot" aria-hidden="true"></span>
+          <div class="system-status__copy">
+            <strong class="system-status__title">Sistema operativo</strong>
+            <span class="system-status__text">Todos los servicios en línea</span>
+          </div>
+        </div>
+        <p class="sidebar__version">SISTEP v1.1 · Conectado al backend</p>
+      </div>
+    </aside>
+
+    <div class="app-main">
+      <header class="topbar">
+        <div class="topbar__left">
+          <button class="icon-button mobile-menu" id="menuToggle" type="button" aria-label="Abrir menú" aria-controls="sidebar" aria-expanded="false">
+            <svg class="icon" aria-hidden="true"><use href="#icon-menu"></use></svg>
+          </button>
+          <span class="topbar__context" id="topbarContext">Centro de monitoreo</span>
+          <span class="topbar__divider" aria-hidden="true"></span>
+          <span class="live-status">
+            <span class="live-status__dot" aria-hidden="true"></span>
+            Monitoreo en vivo
+          </span>
+        </div>
+        <div class="topbar__right">
+          <span class="topbar__date">
+            <svg class="icon" aria-hidden="true"><use href="#icon-calendar"></use></svg>
+            <span id="currentDate">Cargando fecha…</span>
+          </span>
+          <button class="theme-toggle" id="themeToggle" type="button" role="switch" aria-checked="false" data-theme-toggle>
+            <svg class="icon theme-toggle__icon theme-toggle__icon--moon" aria-hidden="true"><use href="#icon-moon"></use></svg>
+            <svg class="icon theme-toggle__icon theme-toggle__icon--sun" aria-hidden="true"><use href="#icon-sun"></use></svg>
+            <span class="theme-toggle__text">Modo oscuro</span>
+            <span class="sr-only" data-theme-label>Modo oscuro: desactivado</span>
+            <span class="theme-toggle__track" aria-hidden="true"><span class="theme-toggle__thumb"></span></span>
+          </button>
+          <span class="topbar__divider" aria-hidden="true"></span>
+          <div class="user-menu-anchor" id="userMenuAnchor">
+            <button class="user-chip user-chip--button" id="userMenuToggle" type="button"
+                    aria-label="Cuenta de Ana Castro, Operadora" aria-haspopup="menu"
+                    aria-expanded="false" aria-controls="userMenu">
+              <span class="user-chip__avatar" id="userAvatar" aria-hidden="true">AC</span>
+              <span class="user-chip__info">
+                <strong id="userName">Ana Castro</strong>
+                <span id="userRole">Operadora</span>
+              </span>
+              <svg class="icon user-chip__caret" aria-hidden="true"><use href="#icon-chevron-down"></use></svg>
+            </button>
+            <div class="user-menu" id="userMenu" role="menu" aria-labelledby="userMenuToggle" hidden>
+              <div class="user-menu__header">
+                <span class="user-menu__avatar" id="userMenuAvatar" aria-hidden="true">AC</span>
+                <div class="user-menu__identity">
+                  <strong id="userMenuName">Ana Castro</strong>
+                  <span id="userMenuRole">Operadora</span>
+                </div>
+              </div>
+              <p class="user-menu__meta" id="userMenuEmail">ana.castro@sistep.pe</p>
+              <div class="user-menu__divider" aria-hidden="true"></div>
+              <button class="user-menu__item user-menu__item--danger" id="logoutButton" type="button" role="menuitem">
+                <svg class="icon" aria-hidden="true"><use href="#icon-logout"></use></svg>
+                <span>Cerrar sesión</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="main-content" id="mainContent" tabindex="-1">
+        <div class="view" id="viewDashboard" data-view-panel="dashboard">
+        <div class="page-header">
+          <div>
+            <p class="page-kicker">Resumen operativo</p>
+            <h1 class="page-title">Panel de Seguridad</h1>
+            <p class="page-subtitle">Supervisa alertas, incidentes y tiempos de respuesta del equipo en tiempo real.</p>
+          </div>
+          <div class="page-status">
+            <svg class="icon" aria-hidden="true"><use href="#icon-shield"></use></svg>
+            <span>Turno de mañana · <strong>06:00 – 14:00</strong></span>
+          </div>
+        </div>
+
+        <section class="stats-grid" aria-label="Indicadores de seguridad">
+          <article class="stat-card" aria-labelledby="statTotalLabel">
+            <div class="stat-card__main">
+              <span class="stat-card__icon stat-card__icon--primary" aria-hidden="true">
+                <svg class="icon"><use href="#icon-bell"></use></svg>
+              </span>
+              <div class="stat-card__content">
+                <p class="stat-card__label" id="statTotalLabel">Alertas totales</p>
+                <p class="stat-card__value" id="statTotalValue" aria-label="Alertas totales"><span data-stat="total">–</span></p>
+              </div>
+            </div>
+            <div class="stat-card__footer">
+              <span class="stat-card__detail">
+                <span class="mini-dot mini-dot--success" aria-hidden="true"></span>
+                <span data-stat="new-today">Cargando…</span>
+              </span>
+              <span class="stat-card__trend">
+                <svg class="icon" id="statTrendIcon" aria-hidden="true"><use href="#icon-arrow-up"></use></svg>
+                <span data-stat="alerts-trend">–</span>
+              </span>
+            </div>
+          </article>
+
+          <article class="stat-card" aria-labelledby="statActiveLabel">
+            <div class="stat-card__main">
+              <span class="stat-card__icon stat-card__icon--danger" aria-hidden="true">
+                <svg class="icon"><use href="#icon-incident"></use></svg>
+              </span>
+              <div class="stat-card__content">
+                <p class="stat-card__label" id="statActiveLabel">Incidentes activos</p>
+                <p class="stat-card__value"><span data-stat="active-incidents">–</span></p>
+              </div>
+            </div>
+            <div class="stat-card__footer">
+              <span class="stat-card__detail stat-card__detail--danger">
+                <span class="mini-dot mini-dot--danger" aria-hidden="true"></span>
+                <span data-active-attention>Cargando…</span>
+              </span>
+              <span class="stat-card__trend stat-card__trend--danger" data-stat="incidents-today">–</span>
+            </div>
+          </article>
+
+          <article class="stat-card" aria-labelledby="statTimeLabel">
+            <div class="stat-card__main">
+              <span class="stat-card__icon stat-card__icon--accent" aria-hidden="true">
+                <svg class="icon"><use href="#icon-clock"></use></svg>
+              </span>
+              <div class="stat-card__content">
+                <p class="stat-card__label" id="statTimeLabel">Tiempo promedio</p>
+                <p class="stat-card__value"><span data-stat="avg-response">–</span> <span class="stat-card__unit">min</span></p>
+              </div>
+            </div>
+            <div class="stat-card__footer">
+              <span class="stat-card__detail" data-stat="goal-text">Objetivo: menos de 5 min</span>
+              <span class="stat-card__trend" data-stat="response-status">–</span>
+            </div>
+          </article>
+        </section>
+
+        <div class="dashboard-grid">
+        <section class="table-card" aria-labelledby="recentAlertsTitle">
+          <div class="table-card__header">
+            <div class="table-card__titles">
+              <div class="table-card__title-row">
+                <h2 class="table-card__title" id="recentAlertsTitle">Alertas recientes</h2>
+                <span class="count-pill" id="visibleCount" aria-label="7 alertas visibles">7</span>
+              </div>
+              <p class="table-card__subtitle">Últimos eventos registrados en el sistema.</p>
+            </div>
+
+            <div class="table-toolbar">
+              <div class="search-field">
+                <svg class="icon" aria-hidden="true"><use href="#icon-search"></use></svg>
+                <label class="sr-only" for="alertSearch">Buscar alertas</label>
+                <input type="search" id="alertSearch" name="alertSearch" placeholder="Buscar alerta, ID o estado…" autocomplete="off">
+              </div>
+
+              <div class="popover-anchor">
+                <button class="button" id="filterToggle" type="button" aria-expanded="false" aria-haspopup="dialog" aria-controls="filterPopover">
+                  <svg class="icon" aria-hidden="true"><use href="#icon-filter"></use></svg>
+                  Filtrar
+                  <span class="filter-count" id="filterCount" hidden>0</span>
+                </button>
+                <div class="popover" id="filterPopover" role="dialog" hidden aria-labelledby="filterTitle">
+                  <div class="popover__header">
+                    <div>
+                      <h3 class="popover__title" id="filterTitle">Filtrar alertas</h3>
+                      <p class="popover__subtitle">Refina la lista según prioridad o estado.</p>
+                    </div>
+                    <button class="icon-button" type="button" data-close-popover aria-label="Cerrar filtros">
+                      <svg class="icon" aria-hidden="true"><use href="#icon-x"></use></svg>
+                    </button>
+                  </div>
+                  <div class="filter-fields">
+                    <label class="form-field" for="filterPriority">
+                      <span class="form-field__label">Prioridad</span>
+                      <span class="select-wrap">
+                        <select id="filterPriority">
+                          <option value="">Todas las prioridades</option>
+                          <option value="Alta">Alta</option>
+                          <option value="Media">Media</option>
+                          <option value="Baja">Baja</option>
+                        </select>
+                        <svg class="icon" aria-hidden="true"><use href="#icon-chevron-down"></use></svg>
+                      </span>
+                    </label>
+                    <label class="form-field" for="filterStatus">
+                      <span class="form-field__label">Estado</span>
+                      <span class="select-wrap">
+                        <select id="filterStatus">
+                          <option value="">Todos los estados</option>
+                          <option value="Pendiente">Pendiente</option>
+                          <option value="En proceso">En proceso</option>
+                          <option value="Resuelto">Resuelto</option>
+                        </select>
+                        <svg class="icon" aria-hidden="true"><use href="#icon-chevron-down"></use></svg>
+                      </span>
+                    </label>
+                  </div>
+                  <div class="popover__footer">
+                    <button class="button button--ghost" id="resetFilterButton" type="button">Limpiar</button>
+                    <button class="button button--primary" id="applyFiltersButton" type="button">Aplicar filtros</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="popover-anchor">
+                <button class="button" id="actionsToggle" type="button" aria-expanded="false" aria-haspopup="menu" aria-controls="actionsPopover">
+                  <svg class="icon" aria-hidden="true"><use href="#icon-more"></use></svg>
+                  Acciones
+                </button>
+                <div class="popover popover--menu" id="actionsPopover" hidden role="menu" aria-label="Acciones de la tabla">
+                  <button class="menu-item" id="exportButton" type="button" role="menuitem">
+                    <span class="menu-item__icon"><svg class="icon" aria-hidden="true"><use href="#icon-download"></use></svg></span>
+                    <span class="menu-item__copy">
+                      <span class="menu-item__title">Exportar resultados</span>
+                      <span class="menu-item__desc">Descargar alertas visibles en CSV</span>
+                    </span>
+                  </button>
+                  <button class="menu-item" id="refreshButton" type="button" role="menuitem">
+                    <span class="menu-item__icon"><svg class="icon" aria-hidden="true"><use href="#icon-refresh"></use></svg></span>
+                    <span class="menu-item__copy">
+                      <span class="menu-item__title">Actualizar panel</span>
+                      <span class="menu-item__desc">Sincronizar los datos más recientes</span>
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="active-filters" id="activeFilters" hidden>
+            <span class="active-filters__label">Filtros activos</span>
+            <div class="filter-chips" id="filterChips"></div>
+            <button class="text-button" id="clearFiltersButton" type="button">Limpiar todo</button>
+          </div>
+
+          <div class="table-scroll">
+            <table class="alerts-table">
+              <caption class="sr-only">Listado de alertas recientes con prioridad, estado y acciones disponibles.</caption>
+              <thead>
+                <tr>
+                  <th scope="col">ID</th>
+                  <th scope="col">Fecha</th>
+                  <th scope="col">Alerta</th>
+                  <th scope="col">Prioridad</th>
+                  <th scope="col">Estado</th>
+                  <th scope="col">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="alertsBody"></tbody>
+            </table>
+          </div>
+
+          <div class="table-footer">
+            <p class="table-footer__summary" id="tableSummary" aria-live="polite">Cargando alertas…</p>
+            <span class="table-footer__sync">
+              <svg class="icon" aria-hidden="true"><use href="#icon-refresh"></use></svg>
+              <span id="lastUpdated">Sincronizando…</span>
+            </span>
+          </div>
+        </section>
+
+        <aside class="fleet-card" aria-labelledby="fleetTitle">
+          <div class="fleet-card__header">
+            <span class="fleet-card__icon" aria-hidden="true"><svg class="icon"><use href="#icon-bus"></use></svg></span>
+            <div>
+              <h2 class="fleet-card__title" id="fleetTitle">Estado de la flota</h2>
+              <p class="fleet-card__summary" id="fleetSummary" role="status" aria-live="polite">Consultando unidades…</p>
+            </div>
+          </div>
+          <ul class="fleet-list" id="fleetList" aria-label="Unidades Edge AI conectadas"></ul>
+          <div class="fleet-card__footer">
+            <button class="button button--danger panic-button" id="panicButton" type="button">
+              <svg class="icon" aria-hidden="true"><use href="#icon-bell"></use></svg>
+              Botón de pánico
+            </button>
+            <p class="form-hint">Simula la pulsación del conductor. Pide confirmación y no emite sonido en el bus.</p>
+            <details class="fleet-demo">
+              <summary>Herramientas de demostración</summary>
+              <p class="form-hint">Simula la pérdida o la recuperación de red de una unidad.</p>
+              <div class="fleet-demo__actions" id="fleetDemoActions"></div>
+            </details>
+          </div>
+        </aside>
+        </div>
+        </div>
+
+        <!-- ================================================================
+             Vista · Alertas
+             ================================================================ -->
+        <section class="view" id="viewAlertas" data-view-panel="alertas" hidden aria-labelledby="alertasTitle">
+          <div class="page-header">
+            <div>
+              <p class="page-kicker">Gestión de alertas</p>
+              <h1 class="page-title" id="alertasTitle">Alertas</h1>
+              <p class="page-subtitle">Revisa las detecciones del sistema y define el seguimiento de cada evento.</p>
+            </div>
+            <div class="page-status">
+              <svg class="icon" aria-hidden="true"><use href="#icon-bell"></use></svg>
+              <span><strong id="alertQueueCount">3</strong> <span id="alertQueueLabel">alertas activas</span></span>
+            </div>
+          </div>
+
+          <div class="alerts-workspace">
+            <section class="inbox-card" aria-labelledby="inboxTitle">
+              <div class="inbox-card__header">
+                <div>
+                  <h2 class="panel-title" id="inboxTitle">Bandeja de alertas</h2>
+                  <p class="panel-subtitle">Eventos más recientes</p>
+                </div>
+                <span class="count-pill" id="alertInboxCount" aria-label="3 alertas">3</span>
+              </div>
+              <div class="alert-inbox" id="alertInbox" aria-label="Lista de alertas recientes"></div>
+            </section>
+
+            <section class="alert-detail-panel" id="alertDetailPanel" aria-live="polite">
+              <div id="alertDetailContent">
+                <div class="alert-detail-panel__header">
+                  <div class="alert-detail-heading">
+                    <p class="detail-eyebrow"><span id="alertDetailCode">AL-021</span><span class="detail-eyebrow__dot" aria-hidden="true"></span><span id="alertDetailTime">Hoy · 09:42</span></p>
+                    <h2 class="detail-title" id="alertDetailTitle">Forcejeo detectado</h2>
+                    <p class="detail-summary" id="alertDetailSummary">Posible forcejeo en la unidad BUS-302.</p>
+                  </div>
+                  <span class="badge" id="alertDetailPriority">Alta</span>
+                </div>
+
+                <div class="alert-media-grid">
+                  <div class="alert-media">
+                    <p class="alert-media__label">Ubicación</p>
+                    <div class="alert-map-visual">
+                      <svg viewBox="0 0 520 260" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+                        <rect width="520" height="260" fill="#EEF2FF"/>
+                        <g fill="#E0E7FF">
+                          <rect x="24" y="22" width="92" height="56" rx="5"/>
+                          <rect x="142" y="22" width="120" height="56" rx="5"/>
+                          <rect x="290" y="22" width="80" height="56" rx="5"/>
+                          <rect x="402" y="22" width="94" height="56" rx="5"/>
+                          <rect x="24" y="180" width="135" height="58" rx="5"/>
+                          <rect x="189" y="180" width="83" height="58" rx="5"/>
+                          <rect x="301" y="180" width="105" height="58" rx="5"/>
+                          <rect x="436" y="180" width="60" height="58" rx="5"/>
+                        </g>
+                        <g fill="none" stroke="#FFFFFF" stroke-width="19">
+                          <path d="M-10 118h540"/>
+                          <path d="M160-10v280"/>
+                          <path d="M376-10v280"/>
+                        </g>
+                        <g fill="none" stroke="#C7D2FE" stroke-width="1.5">
+                          <path d="M-10 118h540"/>
+                          <path d="M160-10v280"/>
+                          <path d="M376-10v280"/>
+                        </g>
+                        <g fill="none" stroke="#0F766E" stroke-width="3" stroke-linecap="round" stroke-dasharray="1 9">
+                          <path d="M58 200c52 0 64-50 112-50s44 28 96 28 48-49 112-49"/>
+                        </g>
+                        <g transform="translate(260 92)">
+                          <circle cx="0" cy="0" r="28" fill="#1E3A8A" opacity=".12"/>
+                          <circle cx="0" cy="0" r="18" fill="#1E3A8A" opacity=".2"/>
+                          <path d="M0-20a11 11 0 0 0-11 11c0 8.2 11 20 11 20s11-11.8 11-20A11 11 0 0 0 0-20Z" fill="#1E3A8A"/>
+                          <circle cx="0" cy="-9" r="4" fill="#FFFFFF"/>
+                        </g>
+                        <text id="alertMapStreet" x="24" y="106" fill="#6B7280" font-size="10" font-family="Segoe UI, sans-serif">Av. Javier Prado Este</text>
+                        <text id="alertMapDistrict" x="384" y="158" fill="#6B7280" font-size="10" font-family="Segoe UI, sans-serif">San Isidro</text>
+                      </svg>
+                      <span class="visual-pill">
+                        <svg class="icon" aria-hidden="true"><use href="#icon-map-pin"></use></svg>
+                        Mapa del incidente
+                      </span>
+                    </div>
+                    <p class="alert-media__caption" id="alertMapCaption">Av. Javier Prado Este, San Isidro</p>
+                  </div>
+
+                  <div class="alert-media">
+                    <p class="alert-media__label">Evidencia</p>
+                    <div class="alert-evidence-visual">
+                      <div class="evidence-grid" aria-hidden="true"></div>
+                      <span class="evidence-focus" aria-hidden="true"></span>
+                      <span class="evidence-camera-icon" aria-hidden="true">
+                        <svg class="icon"><use href="#icon-camera"></use></svg>
+                      </span>
+                      <span class="visual-pill visual-pill--dark">
+                        <svg class="icon" aria-hidden="true"><use href="#icon-camera"></use></svg>
+                        Vista de cámara
+                      </span>
+                      <span class="evidence-timestamp" id="alertEvidenceTime">09:42:18</span>
+                    </div>
+                    <p class="alert-media__caption" id="alertEvidenceCaption">Captura IA · BUS-302</p>
+                  </div>
+                </div>
+
+                <dl class="alert-facts">
+                  <div class="alert-facts__item">
+                    <dt>Estado</dt>
+                    <dd><span class="badge badge--warning" id="alertDetailStatus"><span class="badge__dot" aria-hidden="true"></span>Pendiente</span></dd>
+                  </div>
+                  <div class="alert-facts__item">
+                    <dt>Prioridad</dt>
+                    <dd id="alertDetailPriorityText">Alta</dd>
+                  </div>
+                  <div class="alert-facts__item">
+                    <dt>ID</dt>
+                    <dd id="alertDetailId">AL-021</dd>
+                  </div>
+                  <div class="alert-facts__item">
+                    <dt>Tipo</dt>
+                    <dd id="alertDetailType">Forcejeo · IA</dd>
+                  </div>
+                </dl>
+
+                <div class="alert-detail-actions">
+                  <button class="button button--danger" id="notifyPnpButton" type="button">
+                    <svg class="icon" aria-hidden="true"><use href="#icon-incident"></use></svg>
+                    Notificar PNP 105
+                  </button>
+                  <button class="button" id="exportEvidenceButton" type="button">
+                    <svg class="icon" aria-hidden="true"><use href="#icon-download"></use></svg>
+                    Exportar evidencia
+                  </button>
+                  <button class="button" id="dismissAlertButton" type="button">
+                    <svg class="icon" aria-hidden="true"><use href="#icon-x"></use></svg>
+                    Descartar (falso positivo)
+                  </button>
+                </div>
+              </div>
+
+              <div class="empty-state alert-empty-state" id="alertDetailEmpty" hidden>
+                <span class="empty-state__icon" aria-hidden="true">
+                  <svg class="icon"><use href="#icon-check"></use></svg>
+                </span>
+                <p class="empty-state__title">Bandeja al día</p>
+                <p class="empty-state__text">No quedan alertas pendientes de revisión en este momento.</p>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <!-- ================================================================
+             Vista · Incidentes
+             ================================================================ -->
+        <section class="view" id="viewIncidentes" data-view-panel="incidentes" hidden aria-labelledby="incidentesTitle">
+          <div class="page-header">
+            <div>
+              <p class="page-kicker">Historial e investigación</p>
+              <h1 class="page-title" id="incidentesTitle">Incidentes</h1>
+              <p class="page-subtitle">Consulta los eventos registrados, su resolución y la trazabilidad de cada caso.</p>
+            </div>
+            <div class="page-status">
+              <svg class="icon" aria-hidden="true"><use href="#icon-report"></use></svg>
+              <span><strong id="incidentTotalCount">4</strong> <span id="incidentTotalLabel">incidencias registradas</span></span>
+            </div>
+          </div>
+
+          <section class="history-panel" aria-labelledby="historyPanelTitle">
+            <h2 class="sr-only" id="historyPanelTitle">Historial y auditoría de incidentes</h2>
+
+            <div class="incidents-toolbar">
+              <div class="incidents-toolbar__main">
+                <div class="search-field incidents-search">
+                  <svg class="icon" aria-hidden="true"><use href="#icon-search"></use></svg>
+                  <label class="sr-only" for="incidentSearch">Buscar incidentes</label>
+                  <input type="search" id="incidentSearch" placeholder="Buscar por ID, bus, operador o tipo…" autocomplete="off">
+                </div>
+
+                <div class="date-range" role="group" aria-labelledby="dateRangeLabel">
+                  <svg class="icon date-range__icon" aria-hidden="true"><use href="#icon-calendar"></use></svg>
+                  <div class="date-range__body">
+                    <span class="date-range__label" id="dateRangeLabel">Rango de fechas</span>
+                    <div class="date-range__fields">
+                      <label class="sr-only" for="incidentDateFrom">Fecha inicial</label>
+                      <input type="date" id="incidentDateFrom" aria-label="Fecha inicial">
+                      <span class="date-range__separator" aria-hidden="true">–</span>
+                      <label class="sr-only" for="incidentDateTo">Fecha final</label>
+                      <input type="date" id="incidentDateTo" aria-label="Fecha final">
+                    </div>
+                  </div>
+                </div>
+
+                <div class="incidents-toolbar__actions">
+                  <button class="button" id="incidentsPdfButton" type="button">
+                    <svg class="icon" aria-hidden="true"><use href="#icon-download"></use></svg>
+                    Exportar PDF
+                  </button>
+                  <button class="button" id="incidentsCsvButton" type="button">
+                    <svg class="icon" aria-hidden="true"><use href="#icon-report"></use></svg>
+                    Descargar CSV
+                  </button>
+                </div>
+              </div>
+
+              <div class="incidents-toolbar__filters">
+                <label class="inline-select" for="incidentTypeFilter">
+                  <span>Tipo</span>
+                  <span class="select-wrap">
+                    <select id="incidentTypeFilter">
+                      <option value="">Todos los tipos</option>
+                      <option value="Forcejeo">Forcejeo</option>
+                      <option value="Arma detectada">Arma detectada</option>
+                      <option value="Alerta manual">Alerta manual</option>
+                      <option value="Sospechoso">Sospechoso</option>
+                    </select>
+                    <svg class="icon" aria-hidden="true"><use href="#icon-chevron-down"></use></svg>
+                  </span>
+                </label>
+                <label class="inline-select" for="incidentStatusFilter">
+                  <span>Estado</span>
+                  <span class="select-wrap">
+                    <select id="incidentStatusFilter">
+                      <option value="">Todos los estados</option>
+                      <option value="Cerrado">Cerrado</option>
+                      <option value="Derivado">Derivado PNP 105</option>
+                      <option value="Resuelto">Resuelto</option>
+                    </select>
+                    <svg class="icon" aria-hidden="true"><use href="#icon-chevron-down"></use></svg>
+                  </span>
+                </label>
+                <label class="inline-select" for="incidentOperatorFilter">
+                  <span>Operador</span>
+                  <span class="select-wrap">
+                    <select id="incidentOperatorFilter">
+                      <option value="">Todos los operadores</option>
+                      <option value="Operador A">Operador A</option>
+                      <option value="Operador B">Operador B</option>
+                      <option value="Operador C">Operador C</option>
+                    </select>
+                    <svg class="icon" aria-hidden="true"><use href="#icon-chevron-down"></use></svg>
+                  </span>
+                </label>
+                <button class="text-button incidents-clear" id="resetIncidentFilters" type="button">Limpiar filtros</button>
+              </div>
+            </div>
+
+            <div class="history-tab-row">
+              <span class="history-tab is-active">
+                <svg class="icon" aria-hidden="true"><use href="#icon-report"></use></svg>
+                Historial y auditoría
+              </span>
+              <span class="history-results" id="incidentResultsLabel" aria-live="polite">4 registros</span>
+            </div>
+
+            <div class="table-scroll">
+              <table class="incidents-table">
+                <caption class="sr-only">Historial de incidentes con filtros, resolución y acciones de auditoría.</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Fecha / hora</th>
+                    <th scope="col">Unidad</th>
+                    <th scope="col">Tipo</th>
+                    <th scope="col">Operador</th>
+                    <th scope="col">Resolución / estado</th>
+                    <th scope="col">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="incidentsTableBody"></tbody>
+              </table>
+            </div>
+
+            <div class="history-footer">
+              <p class="history-footer__summary" id="incidentPageSummary">Mostrando 1–4 de 4 incidentes</p>
+              <div class="history-footer__controls">
+                <label class="page-size" for="incidentPageSize">
+                  <span>Mostrar</span>
+                  <span class="select-wrap select-wrap--compact">
+                    <select id="incidentPageSize">
+                      <option value="5">5</option>
+                      <option value="10">10</option>
+                      <option value="25">25</option>
+                    </select>
+                    <svg class="icon" aria-hidden="true"><use href="#icon-chevron-down"></use></svg>
+                  </span>
+                  <span>por página</span>
+                </label>
+                <div class="pagination-buttons" aria-label="Paginación de incidentes">
+                  <button class="page-button" id="incidentPrevPage" type="button" disabled aria-label="Página anterior">
+                    <svg class="icon" aria-hidden="true"><use href="#icon-chevron-left"></use></svg>
+                  </button>
+                  <span class="page-current" id="incidentPageIndicator" aria-current="page">1</span>
+                  <button class="page-button" id="incidentNextPage" type="button" disabled aria-label="Página siguiente">
+                    <svg class="icon" aria-hidden="true"><use href="#icon-chevron-right"></use></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <!-- ================================================================
+             Vista · Reportes y estadísticas
+             ================================================================ -->
+        <section class="view" id="viewReportes" data-view-panel="reportes" hidden aria-labelledby="reportesTitle">
+          <div class="page-header">
+            <div>
+              <p class="page-kicker">Analítica de seguridad</p>
+              <h1 class="page-title" id="reportesTitle">Reportes y Estadísticas</h1>
+              <p class="page-subtitle">Consulta la evolución de los incidentes y el desempeño del sistema de detección.</p>
+            </div>
+            <div class="page-status">
+              <svg class="icon" aria-hidden="true"><use href="#icon-chart"></use></svg>
+              <span>Información consolidada · <strong>hoy</strong></span>
+            </div>
+          </div>
+
+          <div class="reports-toolbar">
+            <label class="reports-range" for="reportRange">
+              <span class="reports-range__icon" aria-hidden="true">
+                <svg class="icon"><use href="#icon-calendar"></use></svg>
+              </span>
+              <span class="reports-range__copy">
+                <span class="reports-range__label">Rango de fechas</span>
+                <span class="select-wrap select-wrap--clean">
+                  <select id="reportRange">
+                    <option value="7">Últimos 7 días</option>
+                    <option value="30" selected>Últimos 30 días</option>
+                    <option value="90">Últimos 90 días</option>
+                  </select>
+                  <svg class="icon" aria-hidden="true"><use href="#icon-chevron-down"></use></svg>
+                </span>
+              </span>
+            </label>
+            <p class="reports-updated" id="reportsPeriodLabel">01 oct 2026 – 25 oct 2026</p>
+            <div class="reports-actions">
+              <button class="button" id="reportsPdfButton" type="button">
+                <svg class="icon" aria-hidden="true"><use href="#icon-download"></use></svg>
+                Exportar PDF
+              </button>
+              <button class="button" id="reportsExcelButton" type="button">
+                <svg class="icon" aria-hidden="true"><use href="#icon-report"></use></svg>
+                Exportar Excel
+              </button>
+            </div>
+          </div>
+
+          <div class="reports-grid">
+            <article class="chart-card chart-card--types" aria-labelledby="incidentTypesTitle">
+              <header class="chart-card__header">
+                <div>
+                  <h2 class="chart-card__title" id="incidentTypesTitle">Tipos de incidentes más comunes</h2>
+                  <p class="chart-card__subtitle">Eventos detectados por categoría</p>
+                </div>
+                <span class="chart-metric" id="reportTypesTotal">42 incidentes</span>
+              </header>
+              <div class="bar-chart" id="reportTypesChart" role="img" aria-label="Gráfico de barras de tipos de incidentes"></div>
+            </article>
+
+            <article class="chart-card" aria-labelledby="resolutionTitle">
+              <header class="chart-card__header">
+                <div>
+                  <h2 class="chart-card__title" id="resolutionTitle">Estado de resolución</h2>
+                  <p class="chart-card__subtitle">Resultado final de los casos</p>
+                </div>
+              </header>
+              <div class="donut-layout">
+                <div class="donut-chart" id="reportStatusDonut" role="img" aria-label="Distribución del estado de resolución">
+                  <div class="donut-chart__hole">
+                    <strong id="reportResolutionTotal">42</strong>
+                    <span>casos</span>
+                  </div>
+                </div>
+                <ul class="chart-legend" id="reportStatusLegend"></ul>
+              </div>
+            </article>
+
+            <article class="chart-card" aria-labelledby="incidentsTimeTitle">
+              <header class="chart-card__header">
+                <div>
+                  <h2 class="chart-card__title" id="incidentsTimeTitle">Incidentes en el tiempo</h2>
+                  <p class="chart-card__subtitle">Tendencia de eventos registrados</p>
+                </div>
+                <span class="chart-metric chart-metric--accent" id="reportTrendLabel">+8%</span>
+              </header>
+              <div class="line-chart" id="reportLineChart" role="img" aria-label="Gráfico de línea de incidentes en el tiempo"></div>
+            </article>
+          </div>
+        </section>
+
+        <!-- ================================================================
+             Vista · Configuración del sistema
+             ================================================================ -->
+        <section class="view" id="viewConfiguracion" data-view-panel="configuracion" hidden aria-labelledby="configuracionTitle">
+          <div class="page-header">
+            <div>
+              <p class="page-kicker">Administración del sistema</p>
+              <h1 class="page-title" id="configuracionTitle">Configuración del Sistema</h1>
+              <p class="page-subtitle">Ajusta los parámetros de detección, los protocolos de alerta y los dispositivos conectados.</p>
+            </div>
+            <div class="page-status">
+              <svg class="icon" aria-hidden="true"><use href="#icon-settings"></use></svg>
+              <span id="configStatusLabel">Configuración sincronizada</span>
+            </div>
+          </div>
+
+          <form class="settings-layout" id="settingsForm">
+            <article class="settings-card settings-card--ai" aria-labelledby="aiConfigTitle">
+              <header class="settings-card__header">
+                <span class="settings-card__icon" aria-hidden="true">
+                  <svg class="icon"><use href="#icon-pulse"></use></svg>
+                </span>
+                <div>
+                  <h2 class="settings-card__title" id="aiConfigTitle">Configuración del modelo de IA</h2>
+                  <p class="settings-card__subtitle">Parámetros del modelo Random Forest</p>
+                </div>
+              </header>
+
+              <div class="settings-card__body">
+                <div class="range-field">
+                  <div class="range-field__header">
+                    <label class="form-label" for="confidenceRange">Umbral de confianza mínimo</label>
+                    <output class="range-value" id="confidenceValue" for="confidenceRange">85%</output>
+                  </div>
+                  <p class="form-hint">Solo se generarán alertas que superen este nivel de confianza.</p>
+                  <input class="range-input" type="range" id="confidenceRange" min="0" max="100" step="1" value="85" aria-describedby="confidenceHint">
+                  <div class="range-scale" aria-hidden="true">
+                    <span>0%</span>
+                    <span>50%</span>
+                    <span>100%</span>
+                  </div>
+                  <span class="sr-only" id="confidenceHint">Valor predeterminado de fábrica: 85 por ciento.</span>
+                </div>
+
+                <fieldset class="settings-fieldset">
+                  <legend class="form-label">Detecciones activas</legend>
+                  <div class="check-list">
+                    <label class="check-row">
+                      <input type="checkbox" name="detectForce" checked>
+                      <span class="check-row__box" aria-hidden="true">
+                        <svg class="icon"><use href="#icon-check"></use></svg>
+                      </span>
+                      <span class="check-row__copy">
+                        <strong>Detectar fuerza</strong>
+                        <span>Forcejeos, empujones o agresiones visibles.</span>
+                      </span>
+                    </label>
+                    <label class="check-row">
+                      <input type="checkbox" name="detectWeapons" checked>
+                      <span class="check-row__box" aria-hidden="true">
+                        <svg class="icon"><use href="#icon-check"></use></svg>
+                      </span>
+                      <span class="check-row__copy">
+                        <strong>Detectar armas de fuego</strong>
+                        <span>Objetos compatibles con armas en la unidad.</span>
+                      </span>
+                    </label>
+                    <label class="check-row">
+                      <input type="checkbox" name="detectObjects">
+                      <span class="check-row__box" aria-hidden="true">
+                        <svg class="icon"><use href="#icon-check"></use></svg>
+                      </span>
+                      <span class="check-row__copy">
+                        <strong>Detectar objetos comunes</strong>
+                        <span>Mochilas, maletas y objetos abandonados.</span>
+                      </span>
+                    </label>
+                  </div>
+                </fieldset>
+
+                <label class="settings-select" for="activeModel">
+                  <span class="form-label">Modelo activo</span>
+                  <span class="select-wrap">
+                    <select id="activeModel" name="activeModel">
+                      <option value="v1.8.0-prod">v1.8.0-prod (recomendado)</option>
+                      <option value="v1.8.0-beta">v1.8.0-beta</option>
+                      <option value="v1.7.6-prod">v1.7.6-prod</option>
+                    </select>
+                    <svg class="icon" aria-hidden="true"><use href="#icon-chevron-down"></use></svg>
+                  </span>
+                </label>
+
+                <div class="model-summary">
+                  <span class="model-summary__icon" aria-hidden="true">
+                    <svg class="icon"><use href="#icon-chart"></use></svg>
+                  </span>
+                  <div class="model-summary__copy">
+                    <span>Precisión del modelo</span>
+                    <strong>96.4%</strong>
+                  </div>
+                  <span class="badge badge--success">
+                    <span class="badge__dot" aria-hidden="true"></span>
+                    Óptimo
+                  </span>
+                </div>
+              </div>
+            </article>
+
+            <div class="settings-side">
+              <article class="settings-card" aria-labelledby="protocolsTitle">
+                <header class="settings-card__header">
+                  <span class="settings-card__icon" aria-hidden="true">
+                    <svg class="icon"><use href="#icon-bell"></use></svg>
+                  </span>
+                  <div>
+                    <h2 class="settings-card__title" id="protocolsTitle">Protocolos de envío y alertas</h2>
+                    <p class="settings-card__subtitle">Acciones ante eventos críticos</p>
+                  </div>
+                </header>
+                <div class="settings-card__body">
+                  <div class="check-list">
+                    <label class="check-row">
+                      <input type="checkbox" name="notifyPnp" checked>
+                      <span class="check-row__box" aria-hidden="true">
+                        <svg class="icon"><use href="#icon-check"></use></svg>
+                      </span>
+                      <span class="check-row__copy">
+                        <strong>Notificar automáticamente a PNP 105</strong>
+                        <span>Envío inmediato para incidentes de alta prioridad.</span>
+                      </span>
+                    </label>
+                    <label class="check-row">
+                      <input type="checkbox" name="soundAlarm">
+                      <span class="check-row__box" aria-hidden="true">
+                        <svg class="icon"><use href="#icon-check"></use></svg>
+                      </span>
+                      <span class="check-row__copy">
+                        <strong>Emitir alerta sonora en caso de robo</strong>
+                        <span>Activa la sirena del bus de forma remota.</span>
+                      </span>
+                    </label>
+                  </div>
+
+                  <label class="contact-field" for="pnpContact">
+                    <span class="form-label">Contacto de emergencia PNP</span>
+                    <span class="input-group">
+                      <span class="input-group__prefix" aria-hidden="true">
+                        <svg class="icon"><use href="#icon-incident"></use></svg>
+                      </span>
+                      <input type="text" id="pnpContact" name="pnpContact" value="105" inputmode="numeric" maxlength="6" aria-describedby="pnpContactHint">
+                    </span>
+                    <span class="form-hint" id="pnpContactHint">Número de contacto para derivar alertas críticas.</span>
+                  </label>
+                </div>
+              </article>
+
+              <article class="settings-card" aria-labelledby="camerasTitle">
+                <header class="settings-card__header settings-card__header--split">
+                  <div class="settings-card__heading">
+                    <span class="settings-card__icon" aria-hidden="true">
+                      <svg class="icon"><use href="#icon-camera"></use></svg>
+                    </span>
+                    <div>
+                      <h2 class="settings-card__title" id="camerasTitle">Cámaras Edge AI en buses</h2>
+                      <p class="settings-card__subtitle">Dispositivos vinculados a la red</p>
+                    </div>
+                  </div>
+                  <button class="button button--sm" id="addCameraButton" type="button">
+                    <svg class="icon" aria-hidden="true"><use href="#icon-plus"></use></svg>
+                    Agregar cámara
+                  </button>
+                </header>
+                <div class="camera-table-wrap">
+                  <table class="camera-table">
+                    <caption class="sr-only">Cámaras del sistema y su estado de conexión</caption>
+                    <thead>
+                      <tr>
+                        <th scope="col">Bus ID</th>
+                        <th scope="col">Modelo</th>
+                        <th scope="col">Estado</th>
+                      </tr>
+                    </thead>
+                    <tbody id="camerasTableBody"></tbody>
+                  </table>
+                </div>
+              </article>
+            </div>
+
+            <div class="settings-actions">
+              <p class="settings-save-note" id="settingsSaveNote">
+                <span class="settings-save-note__dot" aria-hidden="true"></span>
+                <span id="settingsSaveText">Todos los cambios están guardados</span>
+              </p>
+              <div class="settings-actions__buttons">
+                <button class="button" id="settingsCancelButton" type="button">Cancelar</button>
+                <button class="button button--primary" type="submit">Guardar cambios</button>
+              </div>
+            </div>
+          </form>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <dialog class="modal" id="alertDialog" aria-labelledby="dialogTitle">
+    <div class="modal__header">
+      <div class="modal__heading">
+        <div class="modal__eyebrow">
+          <span id="dialogCode">Alerta</span>
+          <span class="badge" id="dialogPriority"></span>
+        </div>
+        <h2 class="modal__title" id="dialogTitle">Detalle de la alerta</h2>
+      </div>
+      <button class="icon-button" type="button" data-dialog-close aria-label="Cerrar detalle">
+        <svg class="icon" aria-hidden="true"><use href="#icon-x"></use></svg>
+      </button>
+    </div>
+    <div class="modal__body">
+      <p class="modal__description" id="dialogDescription"></p>
+      <dl class="alert-details">
+        <div class="alert-details__item">
+          <dt><svg class="icon" aria-hidden="true"><use href="#icon-calendar"></use></svg>Fecha</dt>
+          <dd id="dialogDate"></dd>
+        </div>
+        <div class="alert-details__item">
+          <dt><svg class="icon" aria-hidden="true"><use href="#icon-clock"></use></svg>Hora</dt>
+          <dd id="dialogTime"></dd>
+        </div>
+        <div class="alert-details__item">
+          <dt><svg class="icon" aria-hidden="true"><use href="#icon-map-pin"></use></svg>Ubicación</dt>
+          <dd id="dialogLocation"></dd>
+        </div>
+        <div class="alert-details__item">
+          <dt><svg class="icon" aria-hidden="true"><use href="#icon-camera"></use></svg>Dispositivo</dt>
+          <dd id="dialogDevice"></dd>
+        </div>
+        <div class="alert-details__item">
+          <dt><svg class="icon" aria-hidden="true"><use href="#icon-user"></use></svg>Responsable</dt>
+          <dd id="dialogOperator"></dd>
+        </div>
+        <div class="alert-details__item">
+          <dt><svg class="icon" aria-hidden="true"><use href="#icon-info"></use></svg>Estado</dt>
+          <dd><span class="badge" id="dialogStatus"></span></dd>
+        </div>
+      </dl>
+      <div class="alert-note">
+        <svg class="icon" aria-hidden="true"><use href="#icon-shield"></use></svg>
+        <p>Los cambios de estado se reflejan automáticamente en el panel de seguridad.</p>
+      </div>
+    </div>
+    <div class="modal__footer">
+      <button class="button" type="button" data-dialog-close>Volver</button>
+      <button class="button button--primary" id="dialogPrimaryAction" type="button">Marcar como resuelta</button>
+    </div>
+  </dialog>
+
+  <dialog class="modal modal--confirm" id="confirmDialog" aria-labelledby="confirmTitle" aria-describedby="confirmMessage">
+    <div class="modal__header">
+      <div class="modal__heading">
+        <h2 class="modal__title" id="confirmTitle">Confirmar acción</h2>
+      </div>
+      <button class="icon-button" type="button" data-confirm-cancel aria-label="Cancelar y cerrar">
+        <svg class="icon" aria-hidden="true"><use href="#icon-x"></use></svg>
+      </button>
+    </div>
+    <div class="modal__body">
+      <p class="modal__description" id="confirmMessage"></p>
+      <p class="confirm-detail" id="confirmDetail" hidden></p>
+    </div>
+    <div class="modal__footer">
+      <button class="button" type="button" id="confirmCancel" data-confirm-cancel>Cancelar</button>
+      <button class="button button--danger" type="button" id="confirmAccept">Confirmar</button>
+    </div>
+  </dialog>
+
+  <dialog class="modal modal--confirm" id="panicDialog" aria-labelledby="panicTitle" aria-describedby="panicMessage">
+    <form id="panicForm" method="dialog" novalidate>
+      <div class="modal__header">
+        <div class="modal__heading">
+          <h2 class="modal__title" id="panicTitle">¿Enviar alerta de pánico?</h2>
+        </div>
+        <button class="icon-button" type="button" data-panic-cancel aria-label="Cancelar y cerrar">
+          <svg class="icon" aria-hidden="true"><use href="#icon-x"></use></svg>
+        </button>
+      </div>
+      <div class="modal__body">
+        <p class="modal__description" id="panicMessage">Se registrará un incidente de prioridad alta con la ubicación GPS de la unidad. El envío es silencioso: el bus no emite ningún sonido.</p>
+        <div class="form-field">
+          <label class="form-label" for="panicBus">Unidad</label>
+          <select class="text-input" id="panicBus" name="bus" required></select>
+        </div>
+        <p class="form-error" id="panicError" role="alert" hidden></p>
+      </div>
+      <div class="modal__footer">
+        <button class="button" type="button" id="panicCancel" data-panic-cancel>Cancelar</button>
+        <button class="button button--danger" type="submit" id="panicAccept">Enviar alerta silenciosa</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="modal modal--wide" id="incidentDialog" aria-labelledby="incidentDialogTitle">
+    <div class="modal__header">
+      <div class="modal__heading">
+        <div class="modal__eyebrow">
+          <span id="incidentDialogCode">Incidente</span>
+          <span class="badge" id="incidentDialogStatus"></span>
+        </div>
+        <h2 class="modal__title" id="incidentDialogTitle">Detalle del incidente</h2>
+      </div>
+      <button class="icon-button" type="button" id="incidentDialogClose" aria-label="Cerrar detalle del incidente">
+        <svg class="icon" aria-hidden="true"><use href="#icon-x"></use></svg>
+      </button>
+    </div>
+    <div class="modal__body">
+      <p class="modal__description" id="incidentDialogDescription"></p>
+      <dl class="incident-dialog-meta" id="incidentDialogMeta"></dl>
+      <section class="audit-block" aria-labelledby="incidentAuditTitle" tabindex="-1">
+        <h3 class="audit-block__title" id="incidentAuditTitle">Bitácora de auditoría</h3>
+        <ol class="audit-timeline" id="incidentAuditTimeline"></ol>
+      </section>
+    </div>
+    <div class="modal__footer">
+      <button class="button" type="button" id="incidentDialogCloseFooter">Cerrar</button>
+    </div>
+  </dialog>
+
+  <dialog class="modal" id="cameraDialog" aria-labelledby="cameraDialogTitle">
+    <form id="cameraForm" novalidate>
+      <div class="modal__header">
+        <div class="modal__heading">
+          <div class="modal__eyebrow">Dispositivos Edge AI</div>
+          <h2 class="modal__title" id="cameraDialogTitle">Agregar cámara</h2>
+        </div>
+        <button class="icon-button" type="button" id="cameraDialogClose" aria-label="Cerrar formulario de cámara">
+          <svg class="icon" aria-hidden="true"><use href="#icon-x"></use></svg>
+        </button>
+      </div>
+      <div class="modal__body">
+        <p class="modal__description">Vincula una nueva cámara a una unidad de la flota.</p>
+        <div class="camera-form-grid">
+          <label class="form-field" for="cameraBusId">
+            <span class="form-field__label">Bus ID</span>
+            <input class="text-input" type="text" id="cameraBusId" name="busId" placeholder="BUS-302" maxlength="12" autocomplete="off" required>
+          </label>
+          <label class="form-field" for="cameraModel">
+            <span class="form-field__label">Modelo de cámara</span>
+            <span class="select-wrap">
+              <select id="cameraModel" name="model">
+                <option value="Cámara v2">Cámara v2</option>
+                <option value="Cámara v3">Cámara v3</option>
+              </select>
+              <svg class="icon" aria-hidden="true"><use href="#icon-chevron-down"></use></svg>
+            </span>
+          </label>
+        </div>
+        <p class="form-error" id="cameraFormError" role="alert" hidden></p>
+      </div>
+      <div class="modal__footer">
+        <button class="button" type="button" id="cameraCancelButton">Cancelar</button>
+        <button class="button button--primary" type="submit">
+          <svg class="icon" aria-hidden="true"><use href="#icon-plus"></use></svg>
+          Agregar cámara
+        </button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="toast-region" id="toastRegion" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  <noscript>
+    <p style="margin: 20px; padding: 14px; border: 1px solid #FECACA; background: #FEF2F2; color: #991B1B; font-family: sans-serif;">
+      Activa JavaScript para visualizar y gestionar las alertas del panel.
+    </p>
+  </noscript>
+</body>
+</html>

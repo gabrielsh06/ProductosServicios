@@ -1,0 +1,321 @@
+@charset "UTF-8";
+
+/* ==========================================================================
+   SISTEP · Componentes UX/UI de la Guía 11
+   Alternador de tema (HU-10), panel de flota con «Offline» (HU-09), botón de pánico (HU-03),
+   modales de confirmación (UX-04), exportación de evidencia (HU-08). Solo usa tokens de global.css.
+   ========================================================================== */
+
+/* ---------- Alternador de modo oscuro ---------- */
+.theme-toggle {
+  display: inline-flex;
+  min-height: 44px;                      /* objetivo táctil cómodo */
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.theme-toggle:hover {
+  border-color: var(--color-border-hover);
+  background: var(--color-surface-subtle);
+}
+
+.theme-toggle:active {
+  transform: translateY(1px);
+}
+
+.theme-toggle:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.theme-toggle__icon {
+  width: 17px;
+  height: 17px;
+}
+
+.theme-toggle__icon--sun,
+html[data-theme="dark"] .theme-toggle__icon--moon {
+  display: none;
+}
+
+html[data-theme="dark"] .theme-toggle__icon--sun {
+  display: inline-block;
+}
+
+.theme-toggle__track {
+  position: relative;
+  width: 34px;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--color-input-border);
+  transition: background var(--transition-fast);
+}
+
+.theme-toggle__thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  transition: transform var(--transition-fast);
+}
+
+.theme-toggle[aria-checked="true"] .theme-toggle__track {
+  background: var(--color-primary);
+}
+
+.theme-toggle[aria-checked="true"] .theme-toggle__thumb {
+  transform: translateX(14px);
+  background: var(--color-on-fill);
+}
+
+.auth-panel {
+  position: relative;
+}
+
+.auth-panel__tools {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+}
+
+/* ---------- Rejilla del dashboard: tabla + flota ---------- */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+@media (min-width: 1200px) {
+  .dashboard-grid {
+    grid-template-columns: minmax(0, 1fr) 320px;
+  }
+}
+
+/* ---------- Panel de flota (HU-09) ---------- */
+.fleet-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-xs);
+}
+
+.fleet-card__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--color-hairline);
+}
+
+.fleet-card__icon {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.fleet-card__title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.fleet-card__summary {
+  margin: 2px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 12.5px;
+}
+
+.fleet-list {
+  margin: 0;
+  padding: 6px 0;
+  list-style: none;
+}
+
+.fleet-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px 12px;
+  padding: 11px 18px;
+  border-bottom: 1px solid var(--color-hairline);
+}
+
+.fleet-item:last-child {
+  border-bottom: 0;
+}
+
+.fleet-item__dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--color-success);
+  box-shadow: 0 0 0 3px var(--color-success-soft);
+}
+
+.fleet-item--offline .fleet-item__dot {
+  background: var(--color-danger);          /* el color NUNCA es la única señal: va con el texto «Offline» */
+  box-shadow: 0 0 0 3px var(--color-danger-soft);
+}
+
+.fleet-item__plate {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.fleet-item__meta {
+  grid-column: 2 / 4;
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}
+
+.fleet-item--offline {
+  background: var(--color-danger-soft);
+}
+
+.fleet-item__badge-online {
+  border-color: var(--color-success-border);
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+
+.fleet-card__footer {
+  display: grid;
+  gap: 10px;
+  padding: 14px 18px 16px;
+  border-top: 1px solid var(--color-hairline);
+}
+
+.fleet-card__footer .form-hint {
+  margin: 0;
+}
+
+.fleet-empty {
+  padding: 18px;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+
+.fleet-demo summary {
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.fleet-demo summary:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.fleet-demo__actions {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+/* ---------- Botón de pánico (UI-06: estados :hover, :active y :focus-visible definidos) ---------- */
+.panic-button {
+  width: 100%;
+  min-height: 48px;
+  font-size: 14px;
+  letter-spacing: 0.01em;
+}
+
+.panic-button:hover {
+  box-shadow: 0 0 0 4px var(--color-danger-soft), 0 6px 16px rgba(220, 38, 38, 0.28);
+}
+
+.panic-button:active {
+  transform: translateY(2px) scale(0.99);
+  box-shadow: none;
+  background: var(--color-danger-dark);
+}
+
+.panic-button:focus-visible,
+.button--danger:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
+.panic-button[disabled] {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+/* ---------- Modales de confirmación (UX-04) ---------- */
+.modal--confirm {
+  width: min(460px, calc(100vw - 32px));
+}
+
+.modal--confirm .modal__body {
+  display: grid;
+  gap: 12px;
+}
+
+.confirm-detail {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-subtle);
+  font-size: 13px;
+}
+
+/* UI-03: Cancelar y la acción mantienen el mismo tamaño y posición en todos los modales */
+.modal__footer .button {
+  min-height: 44px;
+  min-width: 96px;
+}
+
+/* ---------- Mensaje de pantalla sin incidentes (CA-02.2) ---------- */
+.empty-state--calm .empty-state__icon {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+
+/* ---------- Adaptación a móvil (UI-04) ---------- */
+@media (max-width: 640px) {
+  .theme-toggle__text {
+    display: none;
+  }
+
+  .theme-toggle {
+    padding: 0 8px;
+  }
+
+  .fleet-item {
+    padding-inline: 14px;
+  }
+
+  .alert-detail-actions .button {
+    flex: 1 1 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-toggle,
+  .theme-toggle__track,
+  .theme-toggle__thumb,
+  .panic-button {
+    transition: none;
+  }
+}

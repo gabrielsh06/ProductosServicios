@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1E3A8A">
+  <meta name="description" content="Acceso al panel de seguridad SISTEP. Plataforma de monitoreo y alertas en tiempo real.">
+  <title>Iniciar sesión · SISTEP</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <script src="js/theme.js"></script>
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/auth.css">
+  <link rel="stylesheet" href="css/ux.css">
+  <script src="js/auth.js" defer></script>
+  <script src="js/login.js" defer></script>
+</head>
+<body class="auth-page">
+
+  <svg class="svg-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="icon-shield" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2.8 19 5.5v5.4c0 4.4-2.8 8-7 10.3-4.2-2.3-7-5.9-7-10.3V5.5L12 2.8Z"/>
+        <path d="m8.8 11.9 2.1 2.1 4.4-4.5"/>
+      </g>
+    </symbol>
+    <symbol id="icon-lock" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="4" y="10" width="16" height="11" rx="2.2"/>
+        <path d="M8 10V7a4 4 0 1 1 8 0v3M12 14.5v2.5"/>
+      </g>
+    </symbol>
+    <symbol id="icon-user" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="8" r="4"/>
+        <path d="M4 21a8 8 0 0 1 16 0"/>
+      </g>
+    </symbol>
+    <symbol id="icon-eye" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/>
+        <circle cx="12" cy="12" r="3"/>
+      </g>
+    </symbol>
+    <symbol id="icon-eye-off" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 3l18 18"/>
+        <path d="M10.6 5.1A10.9 10.9 0 0 1 12 5c6.5 0 10 7 10 7a17.4 17.4 0 0 1-3.2 4.1M6.2 6.2A17.2 17.2 0 0 0 2 12s3.5 7 10 7a10.6 10.6 0 0 0 5.8-1.6"/>
+        <path d="M9.9 9.9A3 3 0 0 0 14.1 14.1"/>
+      </g>
+    </symbol>
+    <symbol id="icon-moon" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>
+      </g>
+    </symbol>
+    <symbol id="icon-sun" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="4"/>
+        <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>
+      </g>
+    </symbol>
+    <symbol id="icon-alert" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10.3 3.9 2.7 17a2 2 0 0 0 1.8 3h15a2 2 0 0 0 1.8-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/>
+        <path d="M12 9v4M12 17h.01"/>
+      </g>
+    </symbol>
+    <symbol id="icon-check" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m5 12 4.2 4.2L19 6.5"/>
+      </g>
+    </symbol>
+    <symbol id="icon-arrow-right" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 12h14M13 6l6 6-6 6"/>
+      </g>
+    </symbol>
+    <symbol id="icon-bell" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/>
+        <path d="M10 21h4"/>
+      </g>
+    </symbol>
+    <symbol id="icon-pulse" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 12h4l2.2-6 4.2 12 2.2-6H21"/>
+      </g>
+    </symbol>
+    <symbol id="icon-file" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7l-5-5Z"/>
+        <path d="M14 2v5h5M9 13h6M9 17h6"/>
+      </g>
+    </symbol>
+    <symbol id="icon-chevron-right" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m9 18 6-6-6-6"/>
+      </g>
+    </symbol>
+  </svg>
+
+  <main class="auth-layout">
+
+    <section class="auth-brand" aria-labelledby="authBrandTitle">
+      <div class="auth-brand__grid" aria-hidden="true"></div>
+      <div class="auth-brand__glow" aria-hidden="true"></div>
+
+      <header class="auth-brand__header">
+        <a class="brand brand--auth" href="login.html" aria-label="SISTEP, inicio de sesión">
+          <span class="brand__mark brand__mark--auth" aria-hidden="true">
+            <svg class="icon"><use href="#icon-shield"></use></svg>
+          </span>
+          <span class="brand__copy">
+            <span class="brand__name">SISTEP</span>
+            <span class="brand__tagline">Seguridad inteligente</span>
+          </span>
+        </a>
+        <span class="auth-brand__badge">
+          <svg class="icon icon--sm" aria-hidden="true"><use href="#icon-lock"></use></svg>
+          Acceso institucional
+        </span>
+      </header>
+
+      <div class="auth-brand__content">
+        <p class="auth-kicker"><span aria-hidden="true"></span> Centro de monitoreo urbano</p>
+        <h1 class="auth-brand__title" id="authBrandTitle">Vigilancia inteligente para proteger cada recorrido.</h1>
+        <p class="auth-brand__lead">
+          Centraliza alertas, incidentes y evidencia de las cámaras Edge AI del transporte público,
+          con trazabilidad completa para tu equipo de seguridad.
+        </p>
+
+        <ul class="auth-highlights" aria-label="Capacidades del sistema">
+          <li>
+            <span class="auth-highlights__icon" aria-hidden="true">
+              <svg class="icon"><use href="#icon-pulse"></use></svg>
+            </span>
+            <div>
+              <strong>Detección en tiempo real</strong>
+              <span>Modelos de IA analizan cada unidad de la flota.</span>
+            </div>
+          </li>
+          <li>
+            <span class="auth-highlights__icon" aria-hidden="true">
+              <svg class="icon"><use href="#icon-bell"></use></svg>
+            </span>
+            <div>
+              <strong>Alertas priorizadas</strong>
+              <span>Incidentes críticos derivados a PNP 105 sin demoras.</span>
+            </div>
+          </li>
+          <li>
+            <span class="auth-highlights__icon" aria-hidden="true">
+              <svg class="icon"><use href="#icon-file"></use></svg>
+            </span>
+            <div>
+              <strong>Bitácora y reportes</strong>
+              <span>Evidencia y auditoría para cada decisión operativa.</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <footer class="auth-brand__footer">
+        <div class="auth-status" role="status">
+          <span class="auth-status__dot" aria-hidden="true"></span>
+          <div>
+            <strong>Sistema operativo</strong>
+            <span>Monitoreo 24/7 · Lima, Perú</span>
+          </div>
+        </div>
+        <span class="auth-version">SISTEP v1.1</span>
+      </footer>
+    </section>
+
+    <section class="auth-panel" aria-labelledby="loginTitle">
+      <div class="auth-panel__tools">
+        <button class="theme-toggle" id="themeToggle" type="button" role="switch" aria-checked="false" data-theme-toggle>
+          <svg class="icon theme-toggle__icon theme-toggle__icon--moon" aria-hidden="true"><use href="#icon-moon"></use></svg>
+          <svg class="icon theme-toggle__icon theme-toggle__icon--sun" aria-hidden="true"><use href="#icon-sun"></use></svg>
+          <span class="theme-toggle__text">Modo oscuro</span>
+          <span class="sr-only" data-theme-label>Modo oscuro: desactivado</span>
+          <span class="theme-toggle__track" aria-hidden="true"><span class="theme-toggle__thumb"></span></span>
+        </button>
+        <p class="sr-only" id="themeStatus" role="status" aria-live="polite"></p>
+      </div>
+      <div class="auth-card">
+        <div class="auth-card__mobile-brand">
+          <span class="brand__mark brand__mark--auth" aria-hidden="true">
+            <svg class="icon"><use href="#icon-shield"></use></svg>
+          </span>
+          <span>
+            <strong>SISTEP</strong>
+            <span>Seguridad inteligente</span>
+          </span>
+        </div>
+
+        <p class="auth-card__badge">
+          <svg class="icon icon--sm" aria-hidden="true"><use href="#icon-shield"></use></svg>
+          Plataforma de seguridad
+        </p>
+        <h2 class="auth-card__title" id="loginTitle">Iniciar sesión</h2>
+        <p class="auth-card__subtitle">Ingresa tus credenciales institucionales para acceder al panel.</p>
+
+        <div class="auth-alert" id="loginAlert" role="alert" hidden>
+          <span class="auth-alert__icon" aria-hidden="true">
+            <svg class="icon"><use href="#icon-alert"></use></svg>
+          </span>
+          <div class="auth-alert__copy">
+            <strong id="loginAlertTitle">No pudimos iniciar sesión</strong>
+            <p id="loginAlertText"></p>
+          </div>
+        </div>
+
+        <form class="auth-form" id="loginForm" novalidate>
+          <div class="auth-field">
+            <label class="auth-field__label" for="usuario">Usuario o correo</label>
+            <div class="auth-input" id="usuarioField">
+              <svg class="icon auth-input__icon" aria-hidden="true"><use href="#icon-user"></use></svg>
+              <input type="text" id="usuario" name="usuario" placeholder="ej. acastro" autocomplete="username"
+                     spellcheck="false" autocapitalize="none" maxlength="120" required autofocus
+                     aria-describedby="usuarioHint">
+            </div>
+            <span class="sr-only" id="usuarioHint">Ingresa tu nombre de usuario o correo institucional.</span>
+          </div>
+
+          <div class="auth-field">
+            <label class="auth-field__label" for="password">Contraseña</label>
+            <div class="auth-input" id="passwordField">
+              <svg class="icon auth-input__icon" aria-hidden="true"><use href="#icon-lock"></use></svg>
+              <input type="password" id="password" name="password" placeholder="Tu contraseña"
+                     autocomplete="current-password" maxlength="200" required>
+              <button class="auth-input__action" id="togglePassword" type="button"
+                      aria-label="Mostrar contraseña" aria-pressed="false" aria-controls="password">
+                <svg class="icon" aria-hidden="true"><use href="#icon-eye"></use></svg>
+              </button>
+            </div>
+          </div>
+
+          <p class="auth-caps" id="capsWarning" hidden>
+            <svg class="icon icon--sm" aria-hidden="true"><use href="#icon-alert"></use></svg>
+            Bloq Mayús está activado.
+          </p>
+
+          <div class="auth-options">
+            <label class="auth-check">
+              <input type="checkbox" id="recordar" name="recordar" checked>
+              <span class="auth-check__box" aria-hidden="true">
+                <svg class="icon"><use href="#icon-check"></use></svg>
+              </span>
+              <span>Mantener sesión activa</span>
+            </label>
+            <a class="auth-link" href="mailto:soporte@sistep.pe">¿Necesitas ayuda?</a>
+          </div>
+
+          <button class="auth-submit" id="loginButton" type="submit">
+            <span class="auth-submit__label">Ingresar al panel</span>
+            <span class="auth-submit__spinner" aria-hidden="true"></span>
+            <svg class="icon auth-submit__icon" aria-hidden="true"><use href="#icon-arrow-right"></use></svg>
+          </button>
+
+          <p class="auth-secure">
+            <svg class="icon icon--sm" aria-hidden="true"><use href="#icon-lock"></use></svg>
+            Conexión protegida. Los accesos se registran para auditoría.
+          </p>
+        </form>
+
+        <aside class="auth-demo" aria-label="Cuentas de demostración">
+          <div class="auth-demo__header">
+            <span class="auth-demo__tag">Demo</span>
+            <p>Cuentas de demostración</p>
+          </div>
+          <p class="auth-demo__hint">Contraseña para todas: <code>Sistep2026!</code></p>
+          <div class="auth-demo__list">
+            <button class="auth-demo__account" type="button" data-usuario="admin" data-password="Sistep2026!">
+              <span class="auth-demo__avatar" aria-hidden="true">AD</span>
+              <span class="auth-demo__copy">
+                <strong>Administrador</strong>
+                <span>admin</span>
+              </span>
+              <svg class="icon icon--sm" aria-hidden="true"><use href="#icon-chevron-right"></use></svg>
+            </button>
+            <button class="auth-demo__account" type="button" data-usuario="acastro" data-password="Sistep2026!">
+              <span class="auth-demo__avatar auth-demo__avatar--accent" aria-hidden="true">AC</span>
+              <span class="auth-demo__copy">
+                <strong>Ana Castro</strong>
+                <span>acastro · Operadora</span>
+              </span>
+              <svg class="icon icon--sm" aria-hidden="true"><use href="#icon-chevron-right"></use></svg>
+            </button>
+            <button class="auth-demo__account" type="button" data-usuario="cmendez" data-password="Sistep2026!">
+              <span class="auth-demo__avatar auth-demo__avatar--neutral" aria-hidden="true">CM</span>
+              <span class="auth-demo__copy">
+                <strong>Carlos Méndez</strong>
+                <span>cmendez · Operador</span>
+              </span>
+              <svg class="icon icon--sm" aria-hidden="true"><use href="#icon-chevron-right"></use></svg>
+            </button>
+          </div>
+        </aside>
+
+        <p class="auth-legal">
+          Acceso reservado al personal autorizado. El uso indebido de esta plataforma será reportado.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <noscript>
+    <p style="margin: 20px; padding: 14px; border: 1px solid #FECACA; background: #FEF2F2; color: #991B1B; font-family: sans-serif;">
+      Activa JavaScript para iniciar sesión en SISTEP.
+    </p>
+  </noscript>
+</body>
+</html>

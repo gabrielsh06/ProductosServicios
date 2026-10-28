@@ -1,0 +1,74 @@
+### Variables (extensión REST Client de VS Code)
+@base = http://localhost:3000/api
+@usuario = acastro
+@password = Sistep2026!
+
+### 1) Login: ejecuta esta petición primero
+# @name login
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{ "usuario": "{{usuario}}", "password": "{{password}}", "recordar": true }
+
+### 2) Token devuelto por el login (se usa en todas las peticiones)
+@token = {{login.response.body.token}}
+
+GET {{base}}/auth/me
+Authorization: Bearer {{token}}
+###
+POST {{base}}/auth/logout
+Authorization: Bearer {{token}}
+
+### Salud (pública, sin token)
+GET {{base}}/health
+
+### Dashboard
+GET {{base}}/dashboard
+Authorization: Bearer {{token}}
+###
+PATCH {{base}}/dashboard/alertas/HU-03
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "status": "Resuelto" }
+###
+DELETE {{base}}/dashboard/alertas/HU-03
+Authorization: Bearer {{token}}
+
+### Bandeja de alertas
+GET {{base}}/alertas
+Authorization: Bearer {{token}}
+###
+POST {{base}}/alertas/AL-021/notificar-pnp
+Authorization: Bearer {{token}}
+###
+DELETE {{base}}/alertas/AL-020
+Authorization: Bearer {{token}}
+
+### Incidentes
+GET {{base}}/incidentes
+Authorization: Bearer {{token}}
+
+### Reportes
+GET {{base}}/reportes?rango=30
+Authorization: Bearer {{token}}
+
+### Configuración
+GET {{base}}/configuracion
+Authorization: Bearer {{token}}
+###
+PUT {{base}}/configuracion
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "confidence": 85, "detectForce": true, "detectWeapons": true, "detectObjects": false,
+  "activeModel": "v1.8.0-prod", "notifyPnp": true, "soundAlarm": false, "pnpContact": "105",
+  "cameras": [ { "bus": "BUS-302", "model": "Cámara v3", "active": true },
+               { "bus": "BUS-118", "model": "Cámara v2", "active": true } ] }
+
+### Puente con la IA (HU-01): un forcejeo aparece luego en GET /alertas
+POST {{base}}/eventos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "bus_id": "BUS-302", "velocidad_movimiento": 95, "acercamiento_brusco": 1, "latitud": -12.0911, "longitud": -77.023 }
